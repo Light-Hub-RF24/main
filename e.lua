@@ -835,6 +835,30 @@ MiscSection:AddToggle({
     end
 })
 
+MainSection:AddButton({
+    Name = "Bring Ball (If Owner)",
+    Callback = function()
+        local ball = getBall()
+        if ball then
+            local networkFolder = ball:FindFirstChild("network")
+            if networkFolder then
+                local netOwner = networkFolder:FindFirstChild("networkOwner")
+                if netOwner and netOwner.Value == Players.LocalPlayer then
+                    -- ✅ we are the owner, bring the ball
+                    local hrp = humanoidRootPart
+                    if hrp then
+                        ball.CFrame = hrp.CFrame * CFrame.new(0, -2, -1) -- place near feet
+                        ball.AssemblyLinearVelocity = Vector3.zero
+                        ball.AssemblyAngularVelocity = Vector3.zero
+                    end
+                else
+                    warn("You are not the ball owner → can't bring")
+                end
+            end
+        end
+    end
+})
+
 MiscSection:AddToggle({
     Name = "Ball Predictor (Line)",
     Flag = "MainSection_BallPredictor",
