@@ -835,29 +835,47 @@ MiscSection:AddToggle({
     end
 })
 
-MainSection:AddButton({
-    Name = "Bring Ball (If Owner)",
+PlayerSection:AddButton({
+    Name = "Bring Nearest Ball",
     Callback = function()
-        local ball = getBall()
-        if ball then
-            local networkFolder = ball:FindFirstChild("network")
-            if networkFolder then
-                local netOwner = networkFolder:FindFirstChild("networkOwner")
-                if netOwner and netOwner.Value == Players.LocalPlayer then
-                    -- ✅ we are the owner, bring the ball
-                    local hrp = humanoidRootPart
-                    if hrp then
-                        ball.CFrame = hrp.CFrame * CFrame.new(0, -2, -1) -- place near feet
-                        ball.AssemblyLinearVelocity = Vector3.zero
-                        ball.AssemblyAngularVelocity = Vector3.zero
+        local balls = CollectionService:GetTagged("Ball")
+        local nearestBall, nearestDist = nil, math.huge
+
+        for _, ball in ipairs(balls) do
+            if ball:IsA("BasePart") then
+                -- 🔑 force ownership spoof every time
+                local networkFolder = ball:FindFirstChild("network")
+                if networkFolder then
+                    local netOwner = networkFolder:FindFirstChild("networkOwner")
+                    local owner = networkFolder:FindFirstChild("owner")
+                    if netOwner and netOwner:IsA("ObjectValue") then
+                        netOwner.Value = Players.LocalPlayer
                     end
-                else
-                    warn("You are not the ball owner → can't bring")
+                    if owner and owner:IsA("ObjectValue") then
+                        owner.Value = Players.LocalPlayer
+                    end
+                end
+
+                -- 🔎 find nearest
+                local dist = (ball.Position - humanoidRootPart.Position).Magnitude
+                if dist < nearestDist then
+                    nearestDist = dist
+                    nearestBall = ball
                 end
             end
         end
+
+        -- ✅ bring only the nearest ball
+        if nearestBall then
+            nearestBall.CFrame = humanoidRootPart.CFrame * CFrame.new(0, -2, -1)
+            nearestBall.AssemblyLinearVelocity = Vector3.zero
+            nearestBall.AssemblyAngularVelocity = Vector3.zero
+        else
+            warn("No balls found to bring")
+        end
     end
 })
+
 
 MiscSection:AddToggle({
     Name = "Ball Predictor (Line)",
