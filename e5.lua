@@ -773,7 +773,7 @@ MainSection:AddToggle({
     Callback = function(Value)
         REACH_ENABLED = Value
         if Value then
-            HitboxSelection.Transparency = 0.8
+            HitboxSelection.Transparency = 1
             HitboxPart.Transparency = 0.7
         else
             HitboxSelection.Transparency = 1
