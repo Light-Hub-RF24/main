@@ -573,6 +573,32 @@ local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
+-- keeps HRP fresh after respawn
+local function bindCharacter(char)
+    character = char
+    humanoid = char:WaitForChild("Humanoid")
+    humanoidRootPart = char:WaitForChild("HumanoidRootPart")
+
+    -- make sure limbs are touchable + no shadows
+    for _, limbName in ipairs({"LeftFoot","RightFoot","Left Leg","Right Leg"}) do
+        local limb = char:FindFirstChild(limbName)
+        if limb then
+            limb.CanTouch = true
+            limb.CastShadow = false
+        end
+    end
+end
+
+-- initial bind
+if player.Character then
+    bindCharacter(player.Character)
+end
+
+-- rebind on respawn
+player.CharacterAdded:Connect(function(newChar)
+    bindCharacter(newChar)
+end)
+
 player.CharacterAdded:Connect(function(newChar)
     character = newChar
     humanoid = character:WaitForChild("Humanoid")
@@ -699,7 +725,7 @@ RunService.Heartbeat:Connect(function()
         updatePrediction()
     end
 
-    if character and humanoidRootPart and REACH_ENABLED then
+    if REACH_ENABLED and humanoidRootPart and humanoidRootPart.Parent then
         -- keep hitbox updated
         HitboxPart.CFrame = humanoidRootPart.CFrame
         HitboxPart.Size = Vector3.new(REACH_X, REACH_Y, REACH_Z)
