@@ -573,31 +573,30 @@ local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
--- keeps HRP fresh after respawn
+local limbs = {}
+
+-- rebind function to refresh humanoidRootPart + limbs after respawn
 local function bindCharacter(char)
     character = char
     humanoid = char:WaitForChild("Humanoid")
     humanoidRootPart = char:WaitForChild("HumanoidRootPart")
 
-    -- make sure limbs are touchable + no shadows
+    limbs = {}
     for _, limbName in ipairs({"LeftFoot","RightFoot","Left Leg","Right Leg"}) do
         local limb = char:FindFirstChild(limbName)
         if limb then
             limb.CanTouch = true
             limb.CastShadow = false
+            table.insert(limbs, limb)
         end
     end
 end
 
--- initial bind
+-- initial + respawn hook
 if player.Character then
     bindCharacter(player.Character)
 end
-
--- rebind on respawn
-player.CharacterAdded:Connect(function(newChar)
-    bindCharacter(newChar)
-end)
+player.CharacterAdded:Connect(bindCharacter)
 
 player.CharacterAdded:Connect(function(newChar)
     character = newChar
@@ -737,11 +736,8 @@ RunService.Heartbeat:Connect(function()
             local maxReach = math.max(REACH_X, REACH_Y, REACH_Z)
             local distance = (ball.Position - humanoidRootPart.Position).Magnitude
             if distance <= maxReach then
-                for _, limbName in ipairs({"LeftFoot","RightFoot","Left Leg","Right Leg"}) do
-                    local limb = character:FindFirstChild(limbName)
-                    if limb then
-                        limb.CanTouch = true
-                        limb.CastShadow = false
+                for _, limb in ipairs(limbs) do
+                    if limb and limb.Parent then
                         pcall(function()
                             firetouchinterest(limb, ball, 0)
                             firetouchinterest(limb, ball, 1)
@@ -756,11 +752,8 @@ RunService.Heartbeat:Connect(function()
             if part:IsA("BasePart") and part.Parent ~= character and part ~= ball then
                 if part:GetAttribute("networkOwner") or part:GetAttribute("lastTouch") or
                    (part.Parent and part.Parent.Name == "game") then
-                    for _, limbName in ipairs({"LeftFoot","RightFoot","Left Leg","Right Leg"}) do
-                        local limb = character:FindFirstChild(limbName)
-                        if limb and kickAnimationPlaying then
-                            limb.CanTouch = true
-                            limb.CastShadow = false
+                    for _, limb in ipairs(limbs) do
+                        if limb and limb.Parent and kickAnimationPlaying then
                             pcall(function()
                                 firetouchinterest(limb, part, 0)
                                 firetouchinterest(limb, part, 1)
