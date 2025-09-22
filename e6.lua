@@ -548,6 +548,22 @@ local AutoSection = AutoTab:CreateSection({
     Name = "Auto Features"
 })
 
+
+-- ✅ React Patch Integration
+for _, v in pairs(getgc(true)) do
+    if type(v) == "table" and rawget(v, "gkCheck") then
+        local constants = debug.getconstants(v.react)
+        for i, val in pairs(constants) do
+            if val == "ignoreReactDecline" or val == "specialTool" then
+                debug.setconstant(v.react, i, "ball")
+            elseif val == "overlapCheck" then
+                rawset(v, "check", function() return true end)
+                debug.setconstant(v.react, i, "check")
+            end
+        end
+    end
+end
+
 -- The core game logic from the original script starts here
 for _, v in pairs(getgc(true)) do
     if type(v) == "table" and rawget(v, "gkCheck") then
@@ -773,7 +789,7 @@ MainSection:AddToggle({
     Callback = function(Value)
         REACH_ENABLED = Value
         if Value then
-            HitboxSelection.Transparency = 1
+            HitboxSelection.Transparency = 0.8
             HitboxPart.Transparency = 0.7
         else
             HitboxSelection.Transparency = 1
